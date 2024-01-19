@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Simulation</title>
+
+    <!-- Add Bootstrap CSS from CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Temperature Simulation</h1>
+
+        <form method="post">
+            <div class="form-group">
+                <label for="krawedz_pokoju">Krawędź pokoju:</label>
+                <input type="number" class="form-control" name="krawedz_pokoju" required min="3" max="7" value="5">
+            </div>
+
+            <div class="form-group">
+                <label for="temperatura_docelowa">Temperatura docelowa:</label>
+                <input type="number" class="form-control" name="temperatura_docelowa" required min="10" max="30" value="20">
+            </div>
+
+            <div class="form-group">
+                <label for="czas_trwania_symulacji">Czas trwania symulacji:</label>
+                <input type="number" class="form-control" name="czas_trwania_symulacji" required min="1" max="7" value="5">
+            </div>
+
+            <div class="form-group">
+                <label for="wysokosc">Wysokość nad poziomem morza:</label>
+                <input type="number" class="form-control" name="wysokosc" required min="0" max="800" value="100">
+            </div>
+
+            <div class="form-group">
+                <label for="moc_grzejnika">Moc grzejnika</label>
+                <input type="number" class="form-control" name="moc_grzejnika" required min="1000" max="3000" value="1000">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Symuluj</button>
+        </form>
+
+        {% if fig %}
+            <h2 class="mt-4">Temperatura pokoju względem czasu</h2>
+            {{ fig|safe }}
+        {% endif %}
+
+        {% if fig2 %}
+            <h2 class="mt-4">Moc na jaką grzejnik został ustawiony w czasie</h2>
+            {{ fig2|safe }}
+        {% endif %}
+
+        {% if fig3 %}
+            <h2 class="mt-4">Temperatura zewnętrzna względem czasu</h2>
+            {{ fig3|safe }}
+        {% endif %}
+    </div>
+
+    <!-- Add Bootstrap JS and Popper.js from CDN (optional, but required for some Bootstrap features) -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
