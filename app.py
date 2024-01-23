@@ -22,7 +22,8 @@ def index():
         fig.update_layout(xaxis_title='Czas (minuty)',
                           yaxis_title='Temperatura (C)')
         fig2 = go.Figure(data=go.Scatter(x=time, y=heat_given*60))
-        fig2.update_layout(xaxis_title='Czas (minuty)', yaxis_title='Ciepło (J)')
+        fig2.update_layout(xaxis_title='Czas (minuty)', yaxis_title='Ciepło (J)',
+                           title='Kp = 0.6, Ki = 0.0008, Kd = 7.5')
         fig3 = go.Figure(data=go.Scatter(x=time, y=outside_temperature))
         fig3.update_layout(xaxis_title='Czas (minuty)',
                            yaxis_title='Temperatura (C)')
