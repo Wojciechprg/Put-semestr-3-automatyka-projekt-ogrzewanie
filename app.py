@@ -14,23 +14,34 @@ def index():
         czas_trwania_symulacji = float(request.form['czas_trwania_symulacji'])
         wysokosc = float(request.form['wysokosc'])
         moc_grzejnika = float(request.form['moc_grzejnika'])
-        time, room_temperature, heat_given, outside_temperature, heat_loss = automatyka(krawedz_pokoju, temperatura_docelowa,
-                                                                             czas_trwania_symulacji, wysokosc,
-                                                                             moc_grzejnika)
+        kp = float(request.form['p_value'])
+        ti = float(request.form['i_value'])
+        td = float(request.form['d_value'])
+        time, room_temperature, heat_given, outside_temperature, heat_loss, desired_temp = automatyka(krawedz_pokoju,
+                                                                                        temperatura_docelowa,
+                                                                                        czas_trwania_symulacji,
+                                                                                        wysokosc,
+                                                                                        moc_grzejnika, kp, ti, td)
 
-        fig = go.Figure(data=go.Scatter(x=time, y=room_temperature))
-        fig.update_layout(xaxis_title='Czas (minuty)',
-                          yaxis_title='Temperatura (C)')
-        fig2 = go.Figure(data=go.Scatter(x=time, y=heat_given*60))
-        fig2.update_layout(xaxis_title='Czas (minuty)', yaxis_title='Ciepło (J)',
-                           title='Kp = 0.6, Ki = 0.0008, Kd = 7.5')
-        fig3 = go.Figure(data=go.Scatter(x=time, y=outside_temperature))
-        fig3.update_layout(xaxis_title='Czas (minuty)',
+        fig = go.Figure(data=go.Scatter(x=time/60, y=room_temperature))
+        fig.update_layout(xaxis_title='Czas (godziny)',
+                          yaxis_title='Temperatura (C)',)
+        fig.add_trace(go.Scatter(x=time/60, y=desired_temp * np.ones(len(time))))
+        fig.data[0].marker.color = 'green'
+        fig.data[1].marker.color = 'yellow'
+        fig2 = go.Figure(data=go.Scatter(x=time/60, y=heat_given * 60))
+        fig2.add_trace(go.Scatter(x=time/60, y=heat_loss * 60))
+        fig2.update_layout(xaxis_title='Czas (godziny)', yaxis_title='Ciepło (J)')
+        fig2.data[0].name = 'Ciepło dostarczone'
+        fig2.data[1].name = 'Ciepło utracone'
+        fig2.data[0].marker.color = 'red'
+        fig2.data[1].marker.color = 'purple'
+        fig3 = go.Figure(data=go.Scatter(x=time/60, y=outside_temperature))
+        fig3.update_layout(xaxis_title='Czas (godziny)',
                            yaxis_title='Temperatura (C)')
-        fig4 = go.Figure(data=go.Scatter(x=time, y=heat_loss*60))
-        fig4.update_layout(xaxis_title='Czas (minuty)', yaxis_title='Ciepło (J)')
+        fig3.data[0].marker.color = 'black'
 
-        return render_template('index.html', fig=fig.to_html(), fig2=fig2.to_html(), fig3=fig3.to_html(), fig4=fig4.to_html())
+        return render_template('index.html', fig=fig.to_html(), fig2=fig2.to_html(), fig3=fig3.to_html())
     else:
         return render_template('index.html')
 
@@ -39,7 +50,7 @@ if __name__ == '__main__':
     app.run()
 
 
-def automatyka(krawedz_pokoju, temperatura_docelowa, czas_trwania_symulacji, wysokosc, moc_grzejnika):
+def automatyka(krawedz_pokoju, temperatura_docelowa, czas_trwania_symulacji, wysokosc, moc_grzejnika, kp, ti, td):
     # user inputs
     room_edge = krawedz_pokoju
     desired_temp = temperatura_docelowa
@@ -71,8 +82,7 @@ def automatyka(krawedz_pokoju, temperatura_docelowa, czas_trwania_symulacji, wys
     room_temperature = np.zeros(num_measurements)
     heat_given = np.zeros(num_measurements)
     heat_loss = np.zeros(num_measurements)
-
-
+    error = np.zeros(num_measurements)
 
     # Read the CSV file and extract the desired column
     df = pd.read_csv('data.csv')
@@ -91,65 +101,41 @@ def automatyka(krawedz_pokoju, temperatura_docelowa, czas_trwania_symulacji, wys
     room_temperature[0] = outside_temperature[0]
 
     # PID gains Ziegler-Nichols method
-    Kp = 0.6
-    Ki = 0.0008
-    Kd = 7.5
-    integral = 0
-    previous_error = 0
+
+    error[0] = 0
     umax = 1
     umin = 0
-
+    Kp = kp
+    Ti = ti
+    Td = td
     # simulate temperature control
     for i in range(1, num_measurements):
-
         # Calculate error
-        error = desired_temp - room_temperature[i - 1]
+        error[i] = desired_temp - room_temperature[i - 1]
 
-        # Proportional term
-        P = Kp * error
-
-        # Integral term
-        integral += Ki * error * measurement_interval
-
-        # Derivative term
-        derivative = (error - previous_error) / measurement_interval
-
-        # PID output
-        u = P + integral + (Kd * derivative)
+        # Calculate u
+        u = Kp * (error[i] + (measurement_interval / Ti) * sum(error) + (Td / measurement_interval) * (
+                    error[i] - error[i - 1]))
 
         # Calculate heat given
         heat_given[i] = P_heater * min(max(u, umin), umax)
 
         # Calculate heat loss
-        heat_loss[i] = room_surface_area * heat_transfer_coefficient * (room_temperature[i - 1] - outside_temperature[i - 1])
+        heat_loss[i] = room_surface_area * heat_transfer_coefficient * (
+                room_temperature[i - 1] - outside_temperature[i - 1])
 
         # Calculate air pressure
         air_pressure = air_pressure_at_sea_level * np.exp(
             -g_acceleration * air_molar_mass * alitiude / (R_ideal * (room_temperature[i - 1] + 273.15)))
 
         # Calculate air density
-        air_denstiy = (air_pressure / (R_d * (room_temperature[i - 1] + 273.15))) * 100
+        air_density = (air_pressure / (R_d * (room_temperature[i - 1] + 273.15))) * 100
 
         # Calculate air mass
-        air_mass = air_denstiy * room_volume
+        air_mass = air_density * room_volume
 
-        # Calculate room tempreture
+        # Calculate room temperature
         room_temperature[i] = (measurement_interval / (air_mass * s_heat_capacity)) * (
                 heat_given[i] - heat_loss[i]) + room_temperature[i - 1]
 
-        # Update previous error
-        previous_error = error
-    """   # Plot results
-    fig = go.Figure(data=go.Scatter(x=time, y=room_temperature))
-    fig.update_layout(title='Room temperature over time', xaxis_title='Time (minutes)', yaxis_title='Temperature (C)')
-    fig.show()
-
-    fig2 = go.Figure(data=go.Scatter(x=time, y=heat_given))
-    fig2.update_layout(title='Heat given over time', xaxis_title='Time (minutes)', yaxis_title='Heat (W)')
-    fig2.show()
-
-    fig3 = go.Figure(data=go.Scatter(x=time, y=outside_temperature))
-    fig3.update_layout(title='Outside temperature over time', xaxis_title='Time (minutes)', yaxis_title='Temperature (C)')
-    fig3.show()
-    """
-    return time, room_temperature, heat_given, outside_temperature, heat_loss
+    return time, room_temperature, heat_given, outside_temperature, heat_loss, desired_temp

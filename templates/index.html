@@ -34,6 +34,24 @@
             </div>
 
             <div class="form-group">
+                <label for="p_value">Wzmocnienie regulatora kp</label>
+                <input type="range" class="form-range" name="p_value" min="0.001" max="10" step="0.01" value="0.1">
+                <small id="p_value_help" class="form-text text-muted">Obecna wartość: <span id="p_value_display">0.1</span></small>
+            </div>
+
+            <div class="form-group">
+                <label for="i_value">Czas zdwojenia Ti[s]</label>
+                <input type="range" class="form-range" name="i_value" min="0.01" max="10" step="0.01" value="0.01">
+                <small id="i_value_help" class="form-text text-muted">Obecna wartość: <span id="i_value_display">0.01</span></small>
+            </div>
+
+            <div class="form-group">
+                <label for="d_value">Czas wyprzedzania Td[s]</label>
+                <input type="range" class="form-range" name="d_value" min="0" max="10" step="0.01" value="0.05">
+                <small id="d_value_help" class="form-text text-muted">Obecna wartość: <span id="d_value_display">0.05</span></small>
+            </div>
+
+            <div class="form-group">
                 <label for="wysokosc">Wysokość nad poziomem morza (m)</label>
                 <input type="number" class="form-control" name="wysokosc" required min="0" max="800" value="100">
             </div>
@@ -47,13 +65,8 @@
         {% endif %}
 
         {% if fig2 %}
-            <h2 class="mt-4">Ciepło dodane przez grzejnik</h2>
+            <h2 class="mt-4">Ciepło zyskane/utracone</h2>
             {{ fig2|safe }}
-        {% endif %}
-
-        {%  if fig4 %}
-            <h2 class="mt-4">Ciepło oddane przez ściany</h2>
-            {{ fig4|safe }}
         {% endif %}
 
         {% if fig3 %}
@@ -66,5 +79,31 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script>
+        {% raw %}
+        // Display slider values dynamically
+        const pValueSlider = document.querySelector('input[name="p_value"]');
+        const pValueDisplay = document.getElementById('p_value_display');
+        pValueDisplay.textContent = pValueSlider.value;
+        pValueSlider.addEventListener('input', () => {
+            pValueDisplay.textContent = pValueSlider.value;
+        });
+
+        const iValueSlider = document.querySelector('input[name="i_value"]');
+        const iValueDisplay = document.getElementById('i_value_display');
+        iValueDisplay.textContent = iValueSlider.value;
+        iValueSlider.addEventListener('input', () => {
+            iValueDisplay.textContent = iValueSlider.value;
+        });
+
+        const dValueSlider = document.querySelector('input[name="d_value"]');
+        const dValueDisplay = document.getElementById('d_value_display');
+        dValueDisplay.textContent = dValueSlider.value;
+        dValueSlider.addEventListener('input', () => {
+            dValueDisplay.textContent = dValueSlider.value;
+        });
+        {% endraw %}
+    </script>
+
 </body>
 </html>
