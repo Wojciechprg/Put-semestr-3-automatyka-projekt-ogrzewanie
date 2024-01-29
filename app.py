@@ -27,7 +27,9 @@ def index():
         fig.update_layout(xaxis_title='Czas (godziny)',
                           yaxis_title='Temperatura (C)',)
         fig.add_trace(go.Scatter(x=time/60, y=desired_temp * np.ones(len(time))))
+        fig.data[0].name = 'Temperatura w pomieszczeniu'
         fig.data[0].marker.color = 'green'
+        fig.data[1].name = 'Temperatura docelowa'
         fig.data[1].marker.color = 'yellow'
         fig2 = go.Figure(data=go.Scatter(x=time/60, y=heat_given * 60))
         fig2.add_trace(go.Scatter(x=time/60, y=heat_loss * 60))
